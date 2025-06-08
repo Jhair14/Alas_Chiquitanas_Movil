@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "baseUrl": ".",
+    "moduleResolution": "bundler", 
+    "skipLibCheck": true,
+    "types": ["node"]
+  },
+  "extends": "expo/tsconfig.base"
+}

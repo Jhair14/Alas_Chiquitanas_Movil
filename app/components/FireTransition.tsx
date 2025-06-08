@@ -43,10 +43,10 @@ const FireTransition = ({ isVisible, onAnimationComplete }: FireTransitionProps)
       ['#FFC000', '#FFD000', '#FFE000', '#FFE000'] as WaveColors
     ];
 
-    // Create multiple waves with increasing height and different colors
+    
     waveColors.forEach((colors, index) => {
-      const waveHeight = height / 2.5; // Taller waves for better overlap
-      const topPosition = index * (waveHeight / 3.5); // More overlap between waves
+      const waveHeight = height / 2.5; 
+      const topPosition = index * (waveHeight / 3.5); 
 
       waves.push(
         <View
@@ -67,7 +67,7 @@ const FireTransition = ({ isVisible, onAnimationComplete }: FireTransitionProps)
                 borderTopLeftRadius: 150,
                 borderTopRightRadius: 150,
                 transform: [
-                  { scaleX: 1.4 } // Wider to ensure smoother transitions
+                  { scaleX: 1.4 } 
                 ]
               }
             ]}
@@ -110,11 +110,11 @@ const styles = StyleSheet.create({
   wavesContainer: {
     flex: 1,
     overflow: 'hidden',
-    backgroundColor: '#FFE000', // Yellow background to ensure no gaps
+    backgroundColor: '#FFE000', 
   },
   wave: {
     position: 'absolute',
-    left: -50, // Extended further outside screen
+    left: -50,
     right: -50,
     overflow: 'hidden',
   },

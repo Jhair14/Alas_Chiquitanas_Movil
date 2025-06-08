@@ -1,4 +1,3 @@
-// app/components/BottomBar.tsx
 
 import { View, TouchableOpacity, Image, StyleSheet, Dimensions, Animated } from 'react-native';
 import React, { useContext, useEffect, useRef } from 'react'; 

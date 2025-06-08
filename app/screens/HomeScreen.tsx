@@ -72,7 +72,7 @@ const HomeScreen = () => {
   const [selectedReport, setSelectedReport] = useState<Reporte | null>(null);
   const { updateWidget } = useWidget();
 
-  // Create animated values for each switch
+  
   const [switchAnimations] = useState({
     Alta: new Animated.Value(0),
     Media: new Animated.Value(0),
@@ -108,7 +108,7 @@ const HomeScreen = () => {
           ubicacion: r.ubicacion,
         }));
       
-      // Update widget with new data
+      
       const activeFires = mapped.filter((r: Reporte) => r.nivelPeligro === 'Alta').length;
       updateWidget(activeFires, mapped.length);
     }
@@ -127,7 +127,7 @@ const HomeScreen = () => {
   const toggleFilter = (nivel: Nivel) => {
     setActiveFilters(prev => {
       const isActive = prev.includes(nivel);
-      // Animate the switch
+      
       Animated.spring(switchAnimations[nivel], {
         toValue: isActive ? 0 : 1,
         useNativeDriver: true,
@@ -139,12 +139,12 @@ const HomeScreen = () => {
   const filterReportes = (reportes: Reporte[]): Reporte[] => {
     let filtered = reportes;
     
-    // Apply danger level filters
+    
     if (activeFilters.length > 0) {
       filtered = filtered.filter(reporte => activeFilters.includes(reporte.nivelPeligro));
     }
 
-    // Apply search filter
+    
     if (searchQuery) {
       const searchText = searchQuery.toLowerCase();
       filtered = filtered.filter(reporte => 
@@ -326,7 +326,6 @@ const HomeScreen = () => {
             : selectedReport.nivelPeligro === 'Media'
             ? 'Controlado'
             : 'Apagado',
-          entidad_responsable: 'Bomberos Voluntarios',
           ubicacion: selectedReport.ubicacion,
         } : null}
       />

@@ -22,7 +22,7 @@ const FireWidget = ({
       case 'Alta':
         return ['#FF0000', '#FF7F00'];
       case 'Media':
-        return ['#FFD700', '#FFA500']; // mejor contraste que amarillo claro
+        return ['#FFD700', '#FFA500']; 
       case 'Baja':
         return ['#009E60', '#00C87A'];
       default:

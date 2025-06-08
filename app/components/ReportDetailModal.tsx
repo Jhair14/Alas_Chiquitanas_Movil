@@ -85,7 +85,7 @@ const ReportDetailModal = ({
     if (isLoggedIn) {
       setShowChatOptions(true);
     } else {
-      onChatPress(); // Navigate directly to app chat for view-only
+      onChatPress(); 
     }
   };
 

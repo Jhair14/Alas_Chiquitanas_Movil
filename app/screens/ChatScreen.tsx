@@ -38,7 +38,7 @@ const ChatScreen = ({ zona, nivelPeligro, descripcion, estado }: {
   const reconnectTimeout = useRef<NodeJS.Timeout | null>(null);
   const pingInterval = useRef<NodeJS.Timeout | null>(null);
 
-  // WebSocket URL using Railway domain
+  
   const WEBSOCKET_URL = 'wss://chatwebsocketi-production.up.railway.app';
   const STORAGE_KEY = `chat_mensajes_${zona}`;
 
@@ -47,16 +47,16 @@ const ChatScreen = ({ zona, nivelPeligro, descripcion, estado }: {
     
     const initializeChat = async () => {
       try {
-        // First verify user
+       
         const token = await AsyncStorage.getItem('token');
         const nombre = await AsyncStorage.getItem('usuario_nombre');
         const entidad = await AsyncStorage.getItem('usuario_entidad');
         console.log('👤 Usuario info:', { token: !!token, nombre, entidad });
         
-        // Set authenticated state and wait for it
+        
         await new Promise<void>(resolve => {
           setAutenticado(!!token);
-          setTimeout(resolve, 100); // Give time for state to update
+          setTimeout(resolve, 100); 
         });
         
         if (nombre && entidad) {
@@ -65,7 +65,7 @@ const ChatScreen = ({ zona, nivelPeligro, descripcion, estado }: {
           setNombreUsuario(nombre);
         }
 
-        // Load saved messages
+        
         try {
           const data = await AsyncStorage.getItem(STORAGE_KEY);
           if (data) {
@@ -75,7 +75,7 @@ const ChatScreen = ({ zona, nivelPeligro, descripcion, estado }: {
           console.error('❌ Error cargando mensajes guardados:', error);
         }
 
-        // Connect WebSocket after user verification and state update
+       
         if (!!token) {
           console.log('🔄 Initiating WebSocket connection with auth:', { token: !!token });
           connectWebSocket();
@@ -122,10 +122,9 @@ const ChatScreen = ({ zona, nivelPeligro, descripcion, estado }: {
         setConnectionStatus('Conectado');
         reconnectAttempts.current = 0;
         
-        // Start ping interval
         startPingInterval();
         
-        // Get latest auth state
+       
         const token = await AsyncStorage.getItem('token');
         if (token) {
           console.log('🔐 Found token, authenticating...');
@@ -158,7 +157,6 @@ const ChatScreen = ({ zona, nivelPeligro, descripcion, estado }: {
           clearInterval(pingInterval.current);
         }
 
-        // Attempt to reconnect
         if (reconnectAttempts.current < maxReconnectAttempts) {
           const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 30000);
           reconnectAttempts.current++;
@@ -280,7 +278,7 @@ const ChatScreen = ({ zona, nivelPeligro, descripcion, estado }: {
         break;
         
       case 'pong':
-        // Server responded to ping - connection is alive
+        
         break;
         
       case 'error':

@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "alas_chiquitanas_movil",
+    "slug": "alas_chiquitanas_movil",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/AppIcon2.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/AppIcon2.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/AppIcon2.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "jsEngine": "jsc",
+      "package": "com.andresarteaga.a.alas_chiquitanas_movil"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}
