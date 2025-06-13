@@ -21,6 +21,7 @@ import FireWidget from '../components/FireWidget';
 import BottomBar from '../components/BottomBar';
 import ReportDetailModal from '../components/ReportDetailModal';
 import { useWidget } from '../hooks/useWidget';
+import NetInfo from '@react-native-community/netinfo';
 
 const { width } = Dimensions.get('window');
 
@@ -71,6 +72,8 @@ const HomeScreen = () => {
   const [activeFilters, setActiveFilters] = useState<Nivel[]>([]);
   const [selectedReport, setSelectedReport] = useState<Reporte | null>(null);
   const { updateWidget } = useWidget();
+  const [cachedReportes, setCachedReportes] = useState<Reporte[]>([]);
+  const [isConnected, setIsConnected] = useState(true);
 
   
   const [switchAnimations] = useState({
@@ -107,8 +110,10 @@ const HomeScreen = () => {
           descripcion: r.comentario_adicional || 'Sin descripción',
           ubicacion: r.ubicacion,
         }));
-      
-      
+
+      setCachedReportes(mapped); // Update state
+      AsyncStorage.setItem('cached_reportes', JSON.stringify(mapped)); // Save to storage
+
       const activeFires = mapped.filter((r: Reporte) => r.nivelPeligro === 'Alta').length;
       updateWidget(activeFires, mapped.length);
     }
@@ -157,27 +162,25 @@ const HomeScreen = () => {
   };
 
   const renderReportes = (): Reporte[] => {
-    const reales = (data?.obtenerReportes || [])
-      .filter((item: unknown): item is ReporteAPI =>
-        typeof item === 'object' &&
-        item !== null &&
-        'id' in item &&
-        'nombre_lugar' in item &&
-        'gravedad_incendio' in item
-      )
-      .map((r: ReporteAPI): Reporte => ({
-        id: `real-${r.id}`,
-        zona: r.nombre_lugar,
-        nivelPeligro: normalizeNivel(r.gravedad_incendio),
-        descripcion: r.comentario_adicional || 'Sin comentarios',
-        ubicacion: r.ubicacion,
-      }))
-      .sort((a: Reporte, b: Reporte) => {
-        const prioridad: Record<Nivel, number> = { Alta: 0, Media: 1, Baja: 2 };
-        return prioridad[a.nivelPeligro] - prioridad[b.nivelPeligro];
-      });
+    const reportesToShow = isConnected && data?.obtenerReportes
+      ? (data.obtenerReportes as ReporteAPI[])
+          .filter((item: unknown): item is ReporteAPI =>
+            typeof item === 'object' &&
+            item !== null &&
+            'id' in item &&
+            'nombre_lugar' in item &&
+            'gravedad_incendio' in item
+          )
+          .map((r: ReporteAPI): Reporte => ({
+            id: `real-${r.id}`,
+            zona: r.nombre_lugar,
+            nivelPeligro: normalizeNivel(r.gravedad_incendio),
+            descripcion: r.comentario_adicional || 'Sin comentarios',
+            ubicacion: r.ubicacion,
+          }))
+      : cachedReportes;
 
-    return filterReportes(reales);
+    return filterReportes(reportesToShow || []);
   };
 
   const handleLogout = async () => {
@@ -230,6 +233,23 @@ const HomeScreen = () => {
       </View>
     );
   };
+
+  useEffect(() => {
+    
+    AsyncStorage.getItem('cached_reportes').then(data => {
+      if (data) setCachedReportes(JSON.parse(data));
+    });
+
+  
+    const unsubscribe = NetInfo.addEventListener(state => {
+      setIsConnected(!!state.isConnected);
+      if (state.isConnected) {
+        fetchReportes(); 
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   if (!tokenChecked || loading) {
     return (

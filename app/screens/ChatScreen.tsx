@@ -6,6 +6,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppContext } from '../context/AppContext';
 import { LinearGradient } from 'expo-linear-gradient';
+import NetInfo from '@react-native-community/netinfo';
 
 interface Message {
   nombre: string;
@@ -13,6 +14,7 @@ interface Message {
   texto: string;
   timestamp?: string;
   user_id?: string;
+  offline?: boolean;
 }
 
 const ChatScreen = ({ zona, nivelPeligro, descripcion, estado }: {
@@ -24,6 +26,7 @@ const ChatScreen = ({ zona, nivelPeligro, descripcion, estado }: {
   const { navigate } = useContext(AppContext);
   const [mensaje, setMensaje] = useState('');
   const [mensajes, setMensajes] = useState<Message[]>([]);
+  const [pendingMessages, setPendingMessages] = useState<Message[]>([]);
   const [autenticado, setAutenticado] = useState(false);
   const [nombreUsuario, setNombreUsuario] = useState('');
   const [connectionStatus, setConnectionStatus] = useState('Conectando...');
@@ -41,6 +44,7 @@ const ChatScreen = ({ zona, nivelPeligro, descripcion, estado }: {
   
   const WEBSOCKET_URL = 'wss://chatwebsocketi-production.up.railway.app';
   const STORAGE_KEY = `chat_mensajes_${zona}`;
+  const PENDING_KEY = `chat_pending_${zona}`;
 
   useEffect(() => {
     isMounted.current = true;
@@ -75,6 +79,17 @@ const ChatScreen = ({ zona, nivelPeligro, descripcion, estado }: {
           console.error('❌ Error cargando mensajes guardados:', error);
         }
 
+        try {
+          const pending = await AsyncStorage.getItem(PENDING_KEY);
+          if (pending) {
+            const pendingList = JSON.parse(pending).map((msg: any) => ({ ...msg, offline: true }));
+            setPendingMessages(pendingList);
+            setMensajes(prev => [...prev, ...pendingList]);
+          }
+        } catch (error) {
+          console.error('❌ Error loading pending messages:', error);
+        }
+
        
         if (!!token) {
           console.log('🔄 Initiating WebSocket connection with auth:', { token: !!token });
@@ -92,6 +107,43 @@ const ChatScreen = ({ zona, nivelPeligro, descripcion, estado }: {
       cleanup();
     };
   }, [zona]);
+
+  
+  const sendPendingMessages = async () => {
+    if (!ws.current || ws.current.readyState !== WebSocket.OPEN || !isAuthenticated) {
+      return;
+    }
+    for (const messageData of pendingMessages) {
+      try {
+        ws.current.send(JSON.stringify({
+          type: 'chat_message',
+          message: messageData.texto,
+          user_name: messageData.nombre,
+          entity: messageData.entidad,
+          user_id: messageData.user_id,
+          zone: zona
+        }));
+      } catch (error) {
+        console.error('❌ Error sending pending message:', error);
+        break;
+      }
+    }
+    // Confirm to server that offline messages are now official
+    ws.current.send(JSON.stringify({
+      type: 'confirm_offline_messages'
+    }));
+    setPendingMessages([]);
+    await AsyncStorage.removeItem(PENDING_KEY);
+  };
+
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      if (state.isConnected && pendingMessages.length > 0) {
+        sendPendingMessages();
+      }
+    });
+    return () => unsubscribe();
+  }, [pendingMessages]);
 
   const cleanup = () => {
     if (reconnectTimeout.current) {
@@ -292,8 +344,36 @@ const ChatScreen = ({ zona, nivelPeligro, descripcion, estado }: {
   };
 
   const enviarMensaje = async () => {
-    if (!autenticado || mensaje.trim() === '') return;
+    const token = await AsyncStorage.getItem('token');
+    if (!token || mensaje.trim() === '') return;
 
+    const nombre = await AsyncStorage.getItem('usuario_nombre');
+    const entidad = await AsyncStorage.getItem('usuario_entidad');
+    const userId = await AsyncStorage.getItem('usuario_id');
+
+    const messageData: Message = {
+      nombre: nombre || '',
+      entidad: entidad || '',
+      texto: mensaje.trim(),
+      timestamp: new Date().toISOString(),
+      user_id: userId || ''
+    };
+
+    const netState = await NetInfo.fetch();
+
+    if (!netState.isConnected) {
+      // Save to pending
+      const updatedPending = [...pendingMessages, messageData];
+      setPendingMessages(updatedPending);
+      await AsyncStorage.setItem(PENDING_KEY, JSON.stringify(updatedPending));
+      setMensajes(prev => [...prev, { ...messageData, offline: true }]); 
+      setMensaje('');
+      Keyboard.dismiss();
+      setConnectionStatus('Sin conexión - mensaje guardado');
+      return;
+    }
+
+    // Online: send as usual
     if (!isAuthenticated) {
       setConnectionStatus('No autenticado - reconectando...');
       if (isConnected) {
@@ -308,21 +388,15 @@ const ChatScreen = ({ zona, nivelPeligro, descripcion, estado }: {
       return;
     }
 
-    const nombre = await AsyncStorage.getItem('usuario_nombre');
-    const entidad = await AsyncStorage.getItem('usuario_entidad');
-    const userId = await AsyncStorage.getItem('usuario_id');
-
-    const messageData = {
-      type: 'chat_message',
-      message: mensaje.trim(),
-      user_name: nombre,
-      entity: entidad,
-      user_id: userId,
-      zone: zona
-    };
-
     try {
-      ws.current.send(JSON.stringify(messageData));
+      ws.current.send(JSON.stringify({
+        type: 'chat_message',
+        message: messageData.texto,
+        user_name: messageData.nombre,
+        entity: messageData.entidad,
+        user_id: messageData.user_id,
+        zone: zona
+      }));
       setMensaje('');
       Keyboard.dismiss();
     } catch (error) {
@@ -405,11 +479,18 @@ const ChatScreen = ({ zona, nivelPeligro, descripcion, estado }: {
                   {msg.nombre} {msg.entidad ? `(${msg.entidad})` : ''}
                 </Text>
                 <Text style={{ color: '#FFFFFF', fontSize: 16 }}>{msg.texto}</Text>
-                {msg.timestamp && (
-                  <Text style={styles.timestamp}>
-                    {new Date(msg.timestamp).toLocaleTimeString()}
-                  </Text>
-                )}
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                  {msg.timestamp && (
+                    <Text style={styles.timestamp}>
+                      {new Date(msg.timestamp).toLocaleTimeString()}
+                    </Text>
+                  )}
+                  {msg.offline && (
+                    <Text style={{ color: '#FF9800', marginLeft: 8, fontSize: 12 }}>
+                      (offline)
+                    </Text>
+                  )}
+                </View>
               </View>
             ))
           )}
@@ -424,15 +505,15 @@ const ChatScreen = ({ zona, nivelPeligro, descripcion, estado }: {
                 placeholder="Escribe un mensaje..."
                 placeholderTextColor="#999"
                 style={styles.input}
-                editable={isAuthenticated}
+                editable={autenticado} 
               />
               <TouchableOpacity 
                 style={[
                   styles.sendButton, 
-                  !isAuthenticated && styles.sendButtonDisabled
+                  (!autenticado || !mensaje.trim()) && styles.sendButtonDisabled
                 ]} 
                 onPress={enviarMensaje}
-                disabled={!isAuthenticated || !mensaje.trim()}
+                disabled={!autenticado || !mensaje.trim()} 
               >
                 <Image
                   source={require('../../assets/send_icon.png')}

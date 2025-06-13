@@ -67,11 +67,14 @@ const LoginScreen = () => {
       setUserData(userDataResponse);
 
       if (user) {
+        // Save individual fields (optional, for backward compatibility)
         await AsyncStorage.setItem('usuario_nombre', user.nombre);
         await AsyncStorage.setItem('usuario_id', user.id);
         if (user.entidad_perteneciente) {
           await AsyncStorage.setItem('usuario_entidad', user.entidad_perteneciente);
         }
+        // Save the whole user object for easy access later
+        await AsyncStorage.setItem('usuario_objeto', JSON.stringify(user));
 
         const welcomePrefix = user.genero === 'Femenino' ? 'Bienvenida' : 'Bienvenido';
         setMensajeExito(`${welcomePrefix}, ${user.nombre}`);
