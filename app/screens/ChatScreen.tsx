@@ -108,6 +108,20 @@ const ChatScreen = ({ zona, nivelPeligro, descripcion, estado }: {
     };
   }, [zona]);
 
+  useEffect(() => {
+    const loadChatHistory = async () => {
+    
+      const cached = await AsyncStorage.getItem(STORAGE_KEY);
+      if (cached) {
+        setMensajes(JSON.parse(cached));
+      }
+  
+      connectWebSocket();
+    };
+
+    loadChatHistory();
+  }, [zona]);
+
   
   const sendPendingMessages = async () => {
     if (!ws.current || ws.current.readyState !== WebSocket.OPEN || !isAuthenticated) {
@@ -362,7 +376,6 @@ const ChatScreen = ({ zona, nivelPeligro, descripcion, estado }: {
     const netState = await NetInfo.fetch();
 
     if (!netState.isConnected) {
-      // Save to pending
       const updatedPending = [...pendingMessages, messageData];
       setPendingMessages(updatedPending);
       await AsyncStorage.setItem(PENDING_KEY, JSON.stringify(updatedPending));
@@ -373,7 +386,7 @@ const ChatScreen = ({ zona, nivelPeligro, descripcion, estado }: {
       return;
     }
 
-    // Online: send as usual
+
     if (!isAuthenticated) {
       setConnectionStatus('No autenticado - reconectando...');
       if (isConnected) {

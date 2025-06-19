@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
     gap: 15,
     paddingHorizontal: 20,
     marginTop: 'auto',
-    marginBottom: 80,
+    marginBottom: 30,
   },
   button: {
     backgroundColor: '#E47248',

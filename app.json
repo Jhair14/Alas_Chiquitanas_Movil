@@ -6,7 +6,6 @@
     "orientation": "portrait",
     "icon": "./assets/AppIcon2.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "splash": {
       "image": "./assets/AppIcon2.png",
       "resizeMode": "contain",
@@ -20,7 +19,6 @@
         "foregroundImage": "./assets/AppIcon2.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
       "jsEngine": "jsc",
       "package": "com.andresarteaga.a.alas_chiquitanas_movil"
     },

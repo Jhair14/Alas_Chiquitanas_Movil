@@ -1,6 +1,4 @@
 const { isValidLogin } = require('./authUtils');
-// const client = require('../app/lib/apollo/client').default;
-// const { AUTENTICAR_USUARIO } = require('../app/lib/graphql/auth'); Implementación de prueba de api más adelante
 
 function fakeApiLogin(ci, password) {
   if (ci === '1234567' && password === 'mypassword') {
