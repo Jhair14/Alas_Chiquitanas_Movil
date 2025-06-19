@@ -111,8 +111,8 @@ const HomeScreen = () => {
           ubicacion: r.ubicacion,
         }));
 
-      setCachedReportes(mapped); // Update state
-      AsyncStorage.setItem('cached_reportes', JSON.stringify(mapped)); // Save to storage
+      setCachedReportes(mapped); 
+      AsyncStorage.setItem('cached_reportes', JSON.stringify(mapped)); 
 
       const activeFires = mapped.filter((r: Reporte) => r.nivelPeligro === 'Alta').length;
       updateWidget(activeFires, mapped.length);

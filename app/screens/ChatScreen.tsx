@@ -142,7 +142,7 @@ const ChatScreen = ({ zona, nivelPeligro, descripcion, estado }: {
         break;
       }
     }
-    // Confirm to server that offline messages are now official
+    
     ws.current.send(JSON.stringify({
       type: 'confirm_offline_messages'
     }));
@@ -335,7 +335,7 @@ const ChatScreen = ({ zona, nivelPeligro, descripcion, estado }: {
         
         setMensajes((prev) => {
           const updated = [...prev, newMessage];
-          // Save to AsyncStorage
+
           AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
           return updated;
         });

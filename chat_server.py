@@ -8,7 +8,7 @@ from typing import Dict, Set, List
 import ssl
 import os
 
-# Configure logging
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
@@ -17,11 +17,11 @@ logger = logging.getLogger(__name__)
 
 class WebSocketServer:
     def __init__(self):
-        # Store connected clients with their user info
+        
         self.connected_clients: Dict[str, dict] = {}
-        # Store user sessions
+        
         self.user_sessions: Dict[str, Set[str]] = {}
-        # Store message history
+     
         self.message_history: Dict[str, List[dict]] = {}
         
     async def register_client(self, websocket, client_id: str):
@@ -104,20 +104,20 @@ class WebSocketServer:
             "timestamp": datetime.now().isoformat()
         }
         
-        # Store message in history
+
         zone = message_data.get("zone", "default")
         if zone not in self.message_history:
             self.message_history[zone] = []
         self.message_history[zone].append(broadcast_data)
         
-        # Keep only last 100 messages per zone
+
         if len(self.message_history[zone]) > 100:
             self.message_history[zone] = self.message_history[zone][-100:]
         
         message_json = json.dumps(broadcast_data)
         logger.info(f"📤 Broadcasting message from {message_data['user_name']}")
         
-        # Send to all authenticated clients
+
         disconnected_clients = []
         for client_id, client_info in self.connected_clients.items():
             if client_info['authenticated']:
@@ -159,7 +159,7 @@ class WebSocketServer:
         await self.register_client(websocket, client_id)
         
         try:
-            # Send welcome message
+            
             welcome_msg = {
                 "type": "connection_established",
                 "client_id": client_id,
@@ -223,7 +223,7 @@ class WebSocketServer:
             await self.broadcast_message(message_data, client_id)
         
         elif message_type == "ping":
-            # Respond to ping for connection health check
+            
             pong_msg = {
                 "type": "pong",
                 "timestamp": datetime.now().isoformat()
@@ -234,15 +234,15 @@ class WebSocketServer:
         else:
             logger.warning(f"Unknown message type: {message_type} from client {client_id}")
 
-# Global server instance
+
 server_instance = WebSocketServer()
 
 async def main():
-    # Configuration
+  
     HOST = os.getenv('HOST', '0.0.0.0')
     PORT = int(os.getenv('PORT', 8000))
     
-    # SSL Configuration (optional but recommended for production)
+ 
     ssl_context = None
     if os.getenv('SSL_CERT_PATH') and os.getenv('SSL_KEY_PATH'):
         ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
